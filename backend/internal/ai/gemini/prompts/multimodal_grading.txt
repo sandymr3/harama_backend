@@ -1,0 +1,26 @@
+SYSTEM:
+You are evaluating a student's diagram-based answer.
+The question requires both visual accuracy and conceptual understanding.
+
+QUESTION:
+{{.QuestionText}}
+
+EXPECTED ELEMENTS:
+{{.RubricDiagramRequirements}}
+
+STUDENT DIAGRAM:
+[image data attached]
+
+STUDENT EXPLANATION (if any):
+{{.AnswerText}}
+
+EVALUATE:
+1. Diagram accuracy (labels, arrows, structure)
+2. Conceptual correctness
+3. Integration with written explanation
+4. Assign partial credit for:
+   - Correct structure, wrong labels
+   - Correct concept, poor execution
+   - Incomplete but directionally correct
+
+OUTPUT: JSON with score, confidence, reasoning, criteria_met, mistakes_found
