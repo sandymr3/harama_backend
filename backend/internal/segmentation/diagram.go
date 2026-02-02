@@ -59,6 +59,24 @@ func (d *DiagramDetector) DetectRegions(imgBytes []byte) ([]image.Rectangle, err
 	return regions, nil
 }
 
+// ExtractRegion crops a specific rectangle from the image
+func (d *DiagramDetector) ExtractRegion(imgBytes []byte, rect image.Rectangle) ([]byte, error) {
+	img, err := gocv.IMDecode(imgBytes, gocv.IMReadColor)
+	if err != nil {
+		return nil, err
+	}
+	defer img.Close()
+
+	cropped := img.Region(rect)
+	defer cropped.Close()
+
+	buf, err := gocv.IMEncode(".png", cropped)
+	if err != nil {
+		return nil, err
+	}
+	return buf.GetBytes(), nil
+}
+
 // Helper to draw detected regions (useful for debugging/UI)
 func (d *DiagramDetector) DrawRegions(imgBytes []byte, regions []image.Rectangle) ([]byte, error) {
 	img, err := gocv.IMDecode(imgBytes, gocv.IMReadColor)
