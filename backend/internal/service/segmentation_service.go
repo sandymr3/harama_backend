@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"fmt"
-	"harama/internal/domain"
 	"harama/internal/repository/postgres"
 	"harama/internal/segmentation"
 	"harama/internal/storage"
