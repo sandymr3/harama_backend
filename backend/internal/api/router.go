@@ -44,6 +44,7 @@ func NewRouter(cfg *config.Config, db *bun.DB) *chi.Mux {
 
 	// 6. Global Middleware
 	r.Use(middleware.TenantMiddleware)
+	r.Use(middleware.RateLimitMiddleware(middleware.NewIPRateLimiter(10, 20)))
 
 	// 7. Routes
 	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
