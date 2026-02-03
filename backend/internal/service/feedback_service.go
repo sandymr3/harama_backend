@@ -63,35 +63,6 @@ func (s *FeedbackService) CaptureOverrideFeedback(ctx context.Context, submissio
 	return s.repo.SaveFeedbackEvent(ctx, event)
 }
 
-func (s *FeedbackService) AnalyzeQuestionPatterns(ctx context.Context, questionID uuid.UUID) (ai.AnalysisResult, error) {
-	// 1. Get question and rubric
-	question, err := s.examRepo.GetQuestionByID(ctx, questionID)
-	if err != nil {
-		return ai.AnalysisResult{}, err
-	}
-
-	if question.Rubric == nil {
-		return ai.AnalysisResult{}, nil // No rubric to analyze against
-	}
-
-	// 2. Get feedback events for this question
-	events, err := s.repo.GetFeedbackByQuestion(ctx, questionID)
-	if err != nil {
-		return ai.AnalysisResult{}, err
-	}
-
-	if len(events) == 0 {
-		return ai.AnalysisResult{}, nil // Not enough data
-	}
-
-	// 3. Call AI to analyze patterns
-	return s.aiProvider.AnalyzePatterns(ctx, ai.AnalysisRequest{
-		QuestionID: questionID,
-		Rubric:     *question.Rubric,
-		Events:     events,
-	})
-}
-
 func (s *FeedbackService) GenerateStudentFeedback(ctx context.Context, submissionID uuid.UUID, questionID uuid.UUID, studentName string) (string, error) {
 	// 1. Get current grade
 	grades, err := s.gradeRepo.GetBySubmission(ctx, submissionID)
@@ -123,6 +94,65 @@ func (s *FeedbackService) GenerateStudentFeedback(ctx context.Context, submissio
 		History:     history,
 		StudentName: studentName,
 	})
+}
+
+func (s *FeedbackService) AnalyzeQuestionPatterns(ctx context.Context, questionID uuid.UUID) (ai.AnalysisResult, error) {
+	// 1. Get question and rubric
+	question, err := s.examRepo.GetQuestionByID(ctx, questionID)
+	if err != nil {
+		return ai.AnalysisResult{}, err
+	}
+
+	if question.Rubric == nil {
+		return ai.AnalysisResult{}, nil // No rubric to analyze against
+	}
+
+	// 2. Get feedback events for this question
+	events, err := s.repo.GetFeedbackByQuestion(ctx, questionID)
+	if err != nil {
+		return ai.AnalysisResult{}, err
+	}
+
+	if len(events) == 0 {
+		return ai.AnalysisResult{}, nil // Not enough data
+	}
+
+	// 3. Call AI to analyze patterns
+	return s.aiProvider.AnalyzePatterns(ctx, ai.AnalysisRequest{
+		QuestionID: questionID,
+		Rubric:     *question.Rubric,
+		Events:     events,
+	})
+}
+
+func (s *FeedbackService) AdaptRubric(ctx context.Context, questionID uuid.UUID) error {
+	// 1. Analyze patterns
+	analysis, err := s.AnalyzeQuestionPatterns(ctx, questionID)
+	if err != nil {
+		return err
+	}
+
+	if analysis.Recommendation == "" {
+		return nil
+	}
+
+	// 2. Get the current question and rubric
+	question, err := s.examRepo.GetQuestionByID(ctx, questionID)
+	if err != nil {
+		return err
+	}
+
+	if question.Rubric == nil {
+		return nil
+	}
+
+	// In a real system, we'd call Gemini again to "Apply these recommendations to this JSON rubric"
+	// For this phase, we'll mark it as a task to be refined in Phase 5 corrections.
+	
+	// Example: Log the recommendation for now or update a 'GradingNotes' field
+	question.Rubric.GradingNotes = "AI Recommendation: " + analysis.Recommendation
+
+	return s.examRepo.UpdateRubric(ctx, question.Rubric)
 }
 
 func (s *FeedbackService) GetFeedbackByQuestion(ctx context.Context, questionID uuid.UUID) ([]domain.FeedbackEvent, error) {
