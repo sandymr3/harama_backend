@@ -4,24 +4,28 @@ import (
 	"context"
 	"fmt"
 	"harama/internal/domain"
-	"harama/internal/ocr"
 	"harama/internal/repository/postgres"
 	"harama/internal/storage"
 
 	"github.com/google/uuid"
 )
 
+// OCRProcessor defines the contract for text extraction strategies
+type OCRProcessor interface {
+	ExtractText(ctx context.Context, fileBytes []byte, mimeType string) (*domain.OCRResult, error)
+}
+
 type OCRService struct {
 	repo    *postgres.SubmissionRepo
 	storage *storage.MinioStorage
-	vision  *ocr.GoogleVisionProcessor
+	processor OCRProcessor
 }
 
-func NewOCRService(repo *postgres.SubmissionRepo, storage *storage.MinioStorage, vision *ocr.GoogleVisionProcessor) *OCRService {
+func NewOCRService(repo *postgres.SubmissionRepo, storage *storage.MinioStorage, processor OCRProcessor) *OCRService {
 	return &OCRService{
-		repo:    repo,
-		storage: storage,
-		vision:  vision,
+		repo:      repo,
+		storage:   storage,
+		processor: processor,
 	}
 }
 
@@ -38,20 +42,20 @@ func (s *OCRService) ProcessSubmission(ctx context.Context, submissionID uuid.UU
 		return err
 	}
 
-	// 3. Process each OCR result (which should have ImageURL as object name for now or we derive it)
+	// 3. Process each OCR result
 	var finalResults []domain.OCRResult
 	for _, res := range sub.OCRResults {
-		// Assume ImageURL is the object name in MinIO for this mock/implementation
+		// Assume ImageURL is the object name in MinIO
 		imgBytes, err := s.storage.GetFile(ctx, res.ImageURL)
 		if err != nil {
 			return fmt.Errorf("failed to get file from storage: %w", err)
 		}
 
-		// TODO: Determine mime type from file extension or content sniffing
+		// TODO: Determine mime type from file extension
 		mimeType := "image/png" 
-		ocrResult, err := s.vision.ExtractText(ctx, imgBytes, mimeType)
+		ocrResult, err := s.processor.ExtractText(ctx, imgBytes, mimeType)
 		if err != nil {
-			return fmt.Errorf("failed to extract text with vision: %w", err)
+			return fmt.Errorf("failed to extract text: %w", err)
 		}
 
 		ocrResult.PageNumber = res.PageNumber

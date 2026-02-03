@@ -37,7 +37,7 @@ func NewRouter(cfg *config.Config, db *bun.DB) *chi.Mux {
 		false, // useSSL
 	)
 
-	visionProcessor, _ := ocr.NewGoogleVisionProcessor(cfg.GeminiAPIKey) // Using same API key for now if applicable or use separate
+	visionProcessor, _ := ocr.NewGeminiOCRProcessor(cfg.GeminiAPIKey)
 
 	// 3. Initialize Engine
 	gradingEngine := grading.NewEngine(aiClient)
