@@ -109,7 +109,52 @@ LENGTH: 3-4 sentences.
 	return "", fmt.Errorf("unexpected response part type")
 }
 
-// Stubs for helper functions
-func loadPromptTemplate(evaluatorID string) string { return "" }
-func buildGradingPrompt(template string, answer domain.AnswerSegment, rubric domain.Rubric) string { return "" }
-func parseResponse(resp *genai.GenerateContentResponse, result *domain.GradingResult) error { return nil }
+func (c *Client) AnalyzePatterns(ctx context.Context, req ai.AnalysisRequest) (ai.AnalysisResult, error) {
+	prompt := fmt.Sprintf(`
+ROLE: Educational pattern analyst
+
+QUESTION ID: %s
+RUBRIC: %v
+FEEDBACK EVENTS:
+%v
+
+TASK:
+Analyze the feedback events where teachers have overridden AI scores.
+Identify:
+1. Systematic biases (e.g., AI is consistently too strict on units).
+2. Common themes in teacher corrections.
+3. Recommendations for improving the rubric or system prompt.
+
+OUTPUT JSON FORMAT:
+{
+  "patterns": ["pattern 1", "pattern 2"],
+  "common_reasons": ["reason 1", "reason 2"],
+  "recommendation": "detailed recommendation"
+}
+`, req.QuestionID, req.Rubric, req.Events)
+
+	resp, err := c.model.GenerateContent(ctx, genai.Text(prompt))
+	if err != nil {
+		return ai.AnalysisResult{}, fmt.Errorf("gemini API error: %w", err)
+	}
+
+	if len(resp.Candidates) == 0 || len(resp.Candidates[0].Content.Parts) == 0 {
+		return ai.AnalysisResult{}, fmt.Errorf("empty response from Gemini")
+	}
+
+	part := resp.Candidates[0].Content.Parts[0]
+	textPart, ok := part.(genai.Text)
+	if !ok {
+		return ai.AnalysisResult{}, fmt.Errorf("unexpected response part type")
+	}
+
+	var result ai.AnalysisResult
+	if err := json.Unmarshal([]byte(textPart), &result); err != nil {
+		// If it's not JSON, we might need a more robust parser or just return as recommendation
+		return ai.AnalysisResult{
+			Recommendation: string(textPart),
+		}, nil
+	}
+
+	return result, nil
+}
