@@ -13,6 +13,7 @@ import (
 	"harama/internal/repository/postgres"
 	"harama/internal/service"
 	"harama/internal/storage"
+	"harama/internal/worker"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/uptrace/bun"
@@ -50,8 +51,10 @@ func NewRouter(cfg *config.Config, db *bun.DB) (*chi.Mux, error) {
 		return nil, fmt.Errorf("failed to initialize gemini vision processor: %w", err)
 	}
 
-	// 3. Initialize Engine
+	// 3. Initialize Engine & Worker Pool
 	gradingEngine := grading.NewEngine(aiClient)
+	workerPool := worker.NewWorkerPool(5, 100)
+	workerPool.Start()
 
 	// 4. Initialize Services
 	examService := service.NewExamService(examRepo, auditRepo)
@@ -61,7 +64,7 @@ func NewRouter(cfg *config.Config, db *bun.DB) (*chi.Mux, error) {
 
 	// 5. Initialize Handlers
 	examHandler := handlers.NewExamHandler(examService)
-	submissionHandler := handlers.NewSubmissionHandler(ocrService, gradingService)
+	submissionHandler := handlers.NewSubmissionHandler(ocrService, gradingService, workerPool)
 	gradingHandler := handlers.NewGradingHandler(gradingService)
 	feedbackHandler := handlers.NewFeedbackHandler(feedbackService)
 

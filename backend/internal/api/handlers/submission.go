@@ -1,12 +1,14 @@
 package handlers
 
 import (
-	"context"
 	"encoding/json"
 	"net/http"
 
+	"harama/internal/auth"
 	"harama/internal/domain"
 	"harama/internal/service"
+	"harama/internal/worker"
+	"harama/internal/worker/jobs"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
@@ -15,16 +17,24 @@ import (
 type SubmissionHandler struct {
 	ocrService     *service.OCRService
 	gradingService *service.GradingService
+	workerPool     *worker.WorkerPool
 }
 
-func NewSubmissionHandler(ocr *service.OCRService, grading *service.GradingService) *SubmissionHandler {
+func NewSubmissionHandler(ocr *service.OCRService, grading *service.GradingService, pool *worker.WorkerPool) *SubmissionHandler {
 	return &SubmissionHandler{
 		ocrService:     ocr,
 		gradingService: grading,
+		workerPool:     pool,
 	}
 }
 
 func (h *SubmissionHandler) CreateSubmission(w http.ResponseWriter, r *http.Request) {
+	tenantID, err := auth.GetTenantID(r.Context())
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusUnauthorized)
+		return
+	}
+
 	examIDStr := chi.URLParam(r, "id")
 	examID, err := uuid.Parse(examIDStr)
 	if err != nil {
@@ -40,20 +50,18 @@ func (h *SubmissionHandler) CreateSubmission(w http.ResponseWriter, r *http.Requ
 		return
 	}
 	sub.ExamID = examID
-	// Hardcode tenant for now
-	sub.TenantID = uuid.MustParse("00000000-0000-0000-0000-000000000000")
+	sub.TenantID = tenantID
 
 	if err := h.ocrService.CreateSubmission(r.Context(), &sub); err != nil {
 		http.Error(w, "failed to create submission: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	// Trigger OCR processing (async in real app)
-	if err := h.ocrService.ProcessSubmission(r.Context(), sub.ID); err != nil {
-		// Log error but don't fail request? For now, fail.
-		http.Error(w, "failed to start processing: "+err.Error(), http.StatusInternalServerError)
-		return
-	}
+	// Trigger OCR processing asynchronously using worker pool
+	h.workerPool.Submit(&jobs.OCRJob{
+		SubmissionID: sub.ID,
+		Service:      h.ocrService,
+	})
 
 	w.WriteHeader(http.StatusAccepted)
 	json.NewEncoder(w).Encode(sub)
@@ -67,11 +75,11 @@ func (h *SubmissionHandler) TriggerGrading(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	// Async in real world
-	go func() {
-		// Create a detached context or use background
-		h.gradingService.GradeSubmission(context.Background(), subID)
-	}()
+	// Submit grading job to worker pool
+	h.workerPool.Submit(&jobs.GradingJob{
+		SubmissionID: subID,
+		Service:      h.gradingService,
+	})
 
 	w.WriteHeader(http.StatusAccepted)
 	w.Write([]byte(`{"status": "grading_started"}`))
