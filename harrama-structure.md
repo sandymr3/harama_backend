@@ -511,7 +511,6 @@ func (c *Client) Grade(ctx context.Context, req ai.GradingRequest) (domain.Gradi
     return result, nil
 }
 ```
-
 ---
 
 ### Frontend Core Files
@@ -523,4 +522,3 @@ func (c *Client) Grade(ctx context.Context, req ai.GradingRequest) (domain.Gradi
 import { useState, useEffect } from 'react'
 import { AnswerDisplay } from './AnswerDisplay'
 import { AIReasoningPanel } from './AIReasoningPanel'
-import { Over
