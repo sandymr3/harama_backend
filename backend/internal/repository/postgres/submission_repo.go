@@ -59,3 +59,17 @@ func (r *SubmissionRepo) ListByExam(ctx context.Context, examID uuid.UUID) ([]do
 		Scan(ctx)
 	return subs, err
 }
+
+func (r *SubmissionRepo) ListPendingReviews(ctx context.Context, tenantID uuid.UUID) ([]domain.Submission, error) {
+	var subs []domain.Submission
+	// Find submissions that belong to the tenant AND have at least one grade with status 'needs_review'
+	err := r.db.NewSelect().
+		Model(&subs).
+		Join("JOIN grades ON grades.submission_id = submission.id").
+		Where("submission.tenant_id = ?", tenantID).
+		Where("grades.status = ?", domain.GradeStatusReview).
+		Group("submission.id").
+		Order("submission.uploaded_at DESC").
+		Scan(ctx)
+	return subs, err
+}

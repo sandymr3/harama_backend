@@ -52,3 +52,31 @@ func TestExamService_CreateExam(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
+
+func TestExamService_ListExams(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	assert.NoError(t, err)
+	defer db.Close()
+
+	bunDB := bun.NewDB(db, pgdialect.New())
+	examRepo := postgres.NewExamRepo(bunDB)
+	// AuditRepo not needed for List
+	examService := service.NewExamService(examRepo, nil)
+
+	ctx := context.Background()
+	tenantID := uuid.New()
+
+	// Expectation: Select exams
+	mock.ExpectQuery(`SELECT .* FROM "exams" .* WHERE \(tenant_id = .*\)`).
+		WillReturnRows(sqlmock.NewRows([]string{"id", "title"}).
+			AddRow(uuid.New(), "Exam 1").
+			AddRow(uuid.New(), "Exam 2"))
+
+	// Execute
+	exams, err := examService.ListExams(ctx, tenantID)
+
+	// Assert
+	assert.NoError(t, err)
+	assert.Len(t, exams, 2)
+	assert.NoError(t, mock.ExpectationsWereMet())
+}

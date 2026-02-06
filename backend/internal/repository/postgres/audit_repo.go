@@ -54,3 +54,14 @@ func (r *AuditRepo) Save(ctx context.Context, log *domain.AuditLog) error {
 	_, err = r.db.NewInsert().Model(log).Exec(ctx)
 	return err
 }
+
+func (r *AuditRepo) GetByEntity(ctx context.Context, entityType string, entityID string) ([]domain.AuditLog, error) {
+	var logs []domain.AuditLog
+	err := r.db.NewSelect().
+		Model(&logs).
+		Where("entity_type = ?", entityType).
+		Where("entity_id = ?", entityID).
+		Order("created_at DESC").
+		Scan(ctx)
+	return logs, err
+}
