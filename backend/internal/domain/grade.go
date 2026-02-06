@@ -37,14 +37,18 @@ type FinalGrade struct {
 	ID            uuid.UUID   `bun:"id,pk,type:uuid,default:uuid_generate_v4()" json:"id"`
 	SubmissionID  uuid.UUID   `bun:"submission_id,notnull,type:uuid" json:"submission_id"`
 	QuestionID    uuid.UUID   `bun:"question_id,notnull,type:uuid" json:"question_id"`
-	FinalScore    float64     `bun:"final_score,notnull" json:"final_score"`
+	FinalScore    float64     `bun:"score,notnull" json:"final_score"` // Mapped to 'score' column
 	MaxScore      int         `bun:"max_score,notnull" json:"max_score"`
-	AIScore       *float64    `bun:"ai_score" json:"ai_score,omitempty"`
-	OverrideScore *float64    `bun:"override_score" json:"override_score,omitempty"`
+	AIScore       *float64    `bun:"-" json:"ai_score,omitempty"` // Not in db yet
+	OverrideScore *float64    `bun:"-" json:"override_score,omitempty"` // Not in db yet
 	Confidence    float64     `bun:"confidence,notnull" json:"confidence"`
 	Reasoning     string      `bun:"reasoning" json:"reasoning"`
+	CriteriaMet   []string    `bun:"criteria_met,type:jsonb" json:"criteria_met"`
+	MistakesFound []string    `bun:"mistakes_found,type:jsonb" json:"mistakes_found"`
+	AIEvaluatorID string      `bun:"ai_evaluator_id" json:"ai_evaluator_id"`
 	Status        GradeStatus `bun:"status,notnull" json:"status"`
-	GradedBy      *uuid.UUID  `bun:"graded_by,type:uuid" json:"graded_by,omitempty"`
+	// GradedBy      *uuid.UUID  `bun:"graded_by,type:uuid" json:"graded_by,omitempty"` // Not in migration 001
+	CreatedAt     time.Time   `bun:"created_at,nullzero,notnull,default:current_timestamp" json:"created_at"`
 	UpdatedAt     time.Time   `bun:"updated_at,nullzero,notnull,default:current_timestamp" json:"updated_at"`
 }
 
