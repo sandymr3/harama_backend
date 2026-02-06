@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"harama/internal/auth"
 	"harama/internal/domain"
 	"harama/internal/service"
 
@@ -20,14 +21,19 @@ func NewExamHandler(s *service.ExamService) *ExamHandler {
 }
 
 func (h *ExamHandler) CreateExam(w http.ResponseWriter, r *http.Request) {
+	tenantID, err := auth.GetTenantID(r.Context())
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusUnauthorized)
+		return
+	}
+
 	var exam domain.Exam
 	if err := json.NewDecoder(r.Body).Decode(&exam); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	// For now, hardcode a tenant ID
-	exam.TenantID = uuid.MustParse("00000000-0000-0000-0000-000000000000")
+	exam.TenantID = tenantID
 
 	if err := h.service.CreateExam(r.Context(), &exam); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
