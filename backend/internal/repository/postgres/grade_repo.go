@@ -40,14 +40,6 @@ func (r *GradeRepo) GetBySubmission(ctx context.Context, submissionID uuid.UUID)
 	return grades, err
 }
 
-func (r *GradeRepo) CreateAuditLog(ctx context.Context, logEntry map[string]interface{}) error {
-	_, err := r.db.NewInsert().
-		Table("audit_log").
-		Model(&logEntry).
-		Exec(ctx)
-	return err
-}
-
 func (r *GradeRepo) SaveEscalation(ctx context.Context, escalation *domain.EscalationCase) error {
 	_, err := r.db.NewInsert().Model(escalation).Exec(ctx)
 	return err
