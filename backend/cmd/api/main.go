@@ -12,7 +12,6 @@ import (
     "harama/internal/config"
     "harama/internal/repository/postgres"
 )
-
 func main() {
     // Load configuration
     cfg := config.Load()
