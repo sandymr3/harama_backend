@@ -38,6 +38,7 @@ type FinalGrade struct {
 	SubmissionID  uuid.UUID   `bun:"submission_id,notnull,type:uuid" json:"submission_id"`
 	QuestionID    uuid.UUID   `bun:"question_id,notnull,type:uuid" json:"question_id"`
 	FinalScore    float64     `bun:"final_score,notnull" json:"final_score"`
+	MaxScore      int         `bun:"max_score,notnull" json:"max_score"`
 	AIScore       *float64    `bun:"ai_score" json:"ai_score,omitempty"`
 	OverrideScore *float64    `bun:"override_score" json:"override_score,omitempty"`
 	Confidence    float64     `bun:"confidence,notnull" json:"confidence"`

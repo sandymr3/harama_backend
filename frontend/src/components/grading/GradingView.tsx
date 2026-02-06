@@ -1,3 +1,5 @@
+'use client';
+
 import { useGrading } from '@/hooks/useGrading'
 import { useSubmission } from '@/hooks/useSubmission'
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner'

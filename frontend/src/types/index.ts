@@ -122,6 +122,7 @@ export interface FinalGrade {
   submission_id: string;
   question_id: string;
   final_score: number;
+  max_score: number;
   ai_score?: number;
   override_score?: number;
   confidence: number;
