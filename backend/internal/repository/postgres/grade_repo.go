@@ -44,3 +44,34 @@ func (r *GradeRepo) SaveEscalation(ctx context.Context, escalation *domain.Escal
 	_, err := r.db.NewInsert().Model(escalation).Exec(ctx)
 	return err
 }
+
+type QuestionStat struct {
+	QuestionID    uuid.UUID `bun:"question_id"`
+	AvgScore      float64   `bun:"avg_score"`
+	ScoreVariance float64   `bun:"score_variance"`
+	ZeroScores    int       `bun:"zero_scores"`
+	PerfectScores int       `bun:"perfect_scores"`
+	TotalGraded   int       `bun:"total_graded"`
+}
+
+func (r *GradeRepo) GetExamStats(ctx context.Context, examID uuid.UUID) ([]QuestionStat, error) {
+	var stats []QuestionStat
+	// Join grades with questions to filter by exam_id
+	// Note: We need to handle max_score comparison carefully. 
+	// Assuming max_score is in grades table (it is per schema)
+	
+	err := r.db.NewSelect().
+		Table("grades").
+		ColumnExpr("grades.question_id").
+		ColumnExpr("AVG(grades.final_score) as avg_score").
+		ColumnExpr("STDDEV(grades.final_score) as score_variance").
+		ColumnExpr("COUNT(CASE WHEN grades.final_score = 0 THEN 1 END) as zero_scores").
+		ColumnExpr("COUNT(CASE WHEN grades.final_score = grades.max_score THEN 1 END) as perfect_scores").
+		ColumnExpr("COUNT(*) as total_graded").
+		Join("JOIN questions ON grades.question_id = questions.id").
+		Where("questions.exam_id = ?", examID).
+		Group("grades.question_id").
+		Scan(ctx, &stats)
+		
+	return stats, err
+}

@@ -109,3 +109,20 @@ func (h *ExamHandler) SetRubric(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(rubric)
 }
+
+func (h *ExamHandler) ListExams(w http.ResponseWriter, r *http.Request) {
+	tenantID, err := auth.GetTenantID(r.Context())
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusUnauthorized)
+		return
+	}
+
+	exams, err := h.service.ListExams(r.Context(), tenantID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(exams)
+}

@@ -818,7 +818,7 @@ func (g *GeminiProvider) Grade(ctx context.Context, req GradingRequest) (Grading
 ai:
   primary_provider: gemini
   gemini:
-    model: gemini-3-pro
+    model: gemini-3-flash-preview
     api_key: ${GEMINI_API_KEY}
     temperature: 0.2
     max_tokens: 2048

@@ -73,3 +73,7 @@ func (s *ExamService) SetRubric(ctx context.Context, questionID uuid.UUID, rubri
 	}
 	return err
 }
+
+func (s *ExamService) ListExams(ctx context.Context, tenantID uuid.UUID) ([]domain.Exam, error) {
+	return s.repo.ListByTenant(ctx, tenantID)
+}

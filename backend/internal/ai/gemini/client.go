@@ -33,7 +33,7 @@ func NewClient(apiKey string) (*Client, error) {
         return nil, err
     }
     
-    model := client.GenerativeModel("gemini-3-pro")
+    model := client.GenerativeModel("gemini-3-flash-preview")
     model.SetTemperature(0.2)
     model.SetTopK(40)
     model.SetTopP(0.95)
@@ -58,7 +58,7 @@ func (c *Client) Grade(ctx context.Context, req ai.GradingRequest) (domain.Gradi
 	prompt := buildGradingPrompt(promptTemplate, req.Answer, req.Rubric, req.Subject, req.QuestionText)
 
 	// Create a local model instance to safely set temperature for this specific call
-	model := c.client.GenerativeModel("gemini-3-pro")
+	model := c.client.GenerativeModel("gemini-3-flash-preview")
 	model.SetTemperature(float32(profile.Temperature))
 
 	// Prepare parts for multimodal input

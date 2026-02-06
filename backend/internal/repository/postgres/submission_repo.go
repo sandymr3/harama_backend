@@ -50,3 +50,12 @@ func (r *SubmissionRepo) SaveOCRResults(ctx context.Context, id uuid.UUID, resul
 		Exec(ctx)
 	return err
 }
+
+func (r *SubmissionRepo) ListByExam(ctx context.Context, examID uuid.UUID) ([]domain.Submission, error) {
+	var subs []domain.Submission
+	err := r.db.NewSelect().
+		Model(&subs).
+		Where("exam_id = ?", examID).
+		Scan(ctx)
+	return subs, err
+}
