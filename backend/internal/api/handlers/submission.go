@@ -71,3 +71,21 @@ func (h *SubmissionHandler) TriggerGrading(w http.ResponseWriter, r *http.Reques
 	w.WriteHeader(http.StatusAccepted)
 	w.Write([]byte(`{"status": "grading_started"}`))
 }
+
+func (h *SubmissionHandler) GetSubmission(w http.ResponseWriter, r *http.Request) {
+	subIDStr := chi.URLParam(r, "id")
+	subID, err := uuid.Parse(subIDStr)
+	if err != nil {
+		http.Error(w, "invalid submission id", http.StatusBadRequest)
+		return
+	}
+
+	sub, err := h.ocrService.GetByID(r.Context(), subID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(sub)
+}
