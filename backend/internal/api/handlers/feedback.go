@@ -23,15 +23,22 @@ func (h *FeedbackHandler) CaptureOverride(w http.ResponseWriter, r *http.Request
 	questionID, _ := uuid.Parse(chi.URLParam(r, "question_id"))
 
 	var body struct {
-		Score  float64 `json:"score"`
-		Reason string  `json:"reason"`
+		Score    float64 `json:"score"`
+		NewScore float64 `json:"new_score"`
+		Reason   string  `json:"reason"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	err := h.service.CaptureOverrideFeedback(r.Context(), subID, questionID, body.Score, body.Reason)
+	// Support both "score" and "new_score" field names from frontend
+	score := body.Score
+	if body.NewScore != 0 {
+		score = body.NewScore
+	}
+
+	err := h.service.CaptureOverrideFeedback(r.Context(), subID, questionID, score, body.Reason)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
