@@ -24,12 +24,9 @@ func (e *PartialCreditEngine) CalculateScore(rubric domain.Rubric, criteriaMet [
 	}
 
 	// 1. Check Full Credit Criteria
-	// If ALL required criteria are met, we might award full points, or sum them up.
-	// The PRD implies criteria act as additive components or checks.
-	// For this implementation, we treat them as additive components unless specified otherwise.
-	
 	for _, criterion := range rubric.FullCreditCriteria {
-		if metSet[criterion.ID] {
+		// Match by ID (preferred) or Description (fallback)
+		if metSet[criterion.ID] || (criterion.Description != "" && metSet[criterion.Description]) {
 			totalScore += criterion.Points
 			appliedRules = append(appliedRules, criterion.ID)
 		}
@@ -38,7 +35,7 @@ func (e *PartialCreditEngine) CalculateScore(rubric domain.Rubric, criteriaMet [
 	// 2. Check Partial Credit Rules
 	for _, rule := range rubric.PartialCreditRules {
 		// Check if the rule itself is marked as met by the AI
-		if metSet[rule.ID] {
+		if metSet[rule.ID] || (rule.Description != "" && metSet[rule.Description]) {
 			// Check dependencies if any
 			dependenciesMet := true
 			for _, depID := range rule.Dependencies {

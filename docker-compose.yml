@@ -51,7 +51,7 @@ services:
       MINIO_ACCESS_KEY: minioadmin
       MINIO_SECRET_KEY: minioadmin
       MINIO_BUCKET: haramma-submissions
-      MINIO_USE_SSL: false
+      MINIO_USE_SSL: "false"
     depends_on:
       postgres:
         condition: service_healthy
@@ -72,8 +72,7 @@ services:
       MINIO_ACCESS_KEY: minioadmin
       MINIO_SECRET_KEY: minioadmin
       MINIO_BUCKET: haramma-submissions
-      MINIO_USE_SSL: false
-      WORKER_COUNT: 10
+      MINIO_USE_SSL: "false"
     depends_on:
       postgres:
         condition: service_healthy

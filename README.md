@@ -1303,7 +1303,7 @@ app = "haramma"
 **Mitigation:**
 - Cache rubric interpretations
 - Batch requests where possible
-- Use Gemini Flash for simple questions
+- Use Gemini 3 Flash Preview for simple questions
 
 ### Risk 3: Grading Fairness
 **Mitigation:**

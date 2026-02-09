@@ -5,9 +5,10 @@ import (
 	"fmt"
 	"strings"
 
+	"harama/internal/domain"
+
 	"github.com/google/generative-ai-go/genai"
 	"google.golang.org/api/option"
-	"harama/internal/domain"
 )
 
 type GeminiOCRProcessor struct {
@@ -22,8 +23,8 @@ func NewGeminiOCRProcessor(apiKey string) (*GeminiOCRProcessor, error) {
 		return nil, err
 	}
 	
-	// Use Gemini 3 Flash for faster/cheaper OCR, or Pro for accuracy
-	model := client.GenerativeModel("gemini-3-flash") 
+	// Use Gemini 3 Flash Preview for faster/cheaper OCR
+	model := client.GenerativeModel("gemini-3-flash-preview") 
 	model.SetTemperature(0.1) // Low temperature for deterministic transcription
 	
 	return &GeminiOCRProcessor{
@@ -38,15 +39,14 @@ func (p *GeminiOCRProcessor) ExtractText(ctx context.Context, fileBytes []byte, 
 	
 	var imgData genai.Part
 	
-	// Handle different mime types if necessary, though Gemini handles standard images/pdfs
-	if mimeType == "application/pdf" {
-		imgData = genai.Blob{MIMEType: mimeType, Data: fileBytes}
-	} else {
-		// Default to generic image if unsure, or specific type
-		if mimeType == "" {
-			mimeType = "image/png"
-		}
-		imgData = genai.ImageData(mimeType, fileBytes)
+	// Default to image/png if mimeType is empty
+	if mimeType == "" {
+		mimeType = "image/png"
+	}
+	
+	imgData = genai.Blob{
+		MIMEType: mimeType,
+		Data:     fileBytes,
 	}
 
 	resp, err := p.model.GenerateContent(ctx, prompt, imgData)

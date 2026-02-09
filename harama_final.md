@@ -243,7 +243,7 @@ To revolutionize academic assessment by making exam evaluation faster, fairer, a
 
 #### FR-4.2: Relevancy Validation (Optional LLM)
 - **Priority:** P2 (Medium)
-- Integrate Gemini 1.5 Flash API for logical consistency check
+- Integrate Gemini 3 Flash Preview API for logical consistency check
 - Validate: Does answer address the question context?
 - Output: Relevancy score (0-1) + brief feedback
 - Fallback: Rule-based keyword matching if API unavailable
@@ -409,8 +409,8 @@ if base_score < threshold[correction_mode]:
 ┌─────────────────────────────────────────────────────────────┐
 │                    AI/ML SERVICES                            │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐      │
-│  │ Gemini Vision│  │ Transformers │  │ Gemini 1.5   │      │
-│  │ (OCR)        │  │ (Sentence    │  │ Flash (LLM)  │      │
+│  │ Gemini Vision│  │ Transformers │  │ Gemini 3     │      │
+│  │ (OCR)        │  │ (Sentence    │  │ Flash Preview│      │
 │  │              │  │ Embeddings)  │  │ (Optional)   │      │
 │  └──────────────┘  └──────────────┘  └──────────────┘      │
 └─────────────────────────────────────────────────────────────┘
@@ -972,7 +972,7 @@ POST /exams/{exam_id}/bulk-report → Generate reports for all students
 
 | Component | Technology | Status | Notes |
 |-----------|-----------|--------|-------|
-| OCR | **Google Gemini Vision (gemini-3-flash)** | ✅ Done | Handwriting extraction |
+| OCR | **Google Gemini Vision (gemini-3-flash-preview)** | ✅ Done | Handwriting extraction |
 | Grading | **Google Gemini (gemini-3-flash-preview)** | ✅ Done | Multi-evaluator consensus |
 | Evaluators | 3 AI Personas | ✅ Done | rubric_enforcer, reasoning_validator, structural_analyzer |
 | Partial Credit | **Custom Go Engine** | ✅ Done | Rubric-based scoring with penalties |
@@ -1160,7 +1160,7 @@ Audit:
 - [ ] Sentence embedding model deployment (local)
 - [ ] Cosine similarity calculation
 - [ ] Mark calculation algorithm (all 3 modes)
-- [ ] Gemini Flash relevancy check (optional, v1.1)
+- [ ] Gemini 3 Flash Preview relevancy check (optional, v1.1)
 - [ ] Partial credit logic
 - [ ] Performance optimization (<5s per answer)
 
@@ -1398,7 +1398,7 @@ Email notifications sent
 | Service | Free Tier Limit | Recommended Buffer |
 |---------|----------------|-------------------|
 | Gemini Vision | 60 req/min | Use queue to limit to 45 req/min |
-| Gemini Flash | 15 req/min | Use queue to limit to 10 req/min |
+| Gemini 3 Flash Preview | 15 req/min | Use queue to limit to 10 req/min |
 | Firebase Firestore | 50K reads/day | Monitor at 40K/day, implement caching |
 | Cloudinary | 25GB bandwidth/month | Monitor at 20GB/month, compress images |
 | Railway | $5 credit/month | Monitor usage weekly, optimize resource usage |
