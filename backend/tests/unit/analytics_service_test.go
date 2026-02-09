@@ -26,6 +26,7 @@ func TestAnalyticsService_GetGradingTrends(t *testing.T) {
 
 	ctx := context.Background()
 	examID := uuid.New()
+	tenantID := uuid.New()
 	questionID := uuid.New()
 
 	// 1. Expectation: GetExamStats
@@ -41,7 +42,7 @@ func TestAnalyticsService_GetGradingTrends(t *testing.T) {
 			AddRow(questionID, "What is photosynthesis?"))
 
 	// Execute
-	trends, err := analyticsService.GetGradingTrends(ctx, examID)
+	trends, err := analyticsService.GetGradingTrends(ctx, tenantID, &examID)
 
 	// Assert
 	assert.NoError(t, err)
